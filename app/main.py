@@ -71,10 +71,17 @@ class DBTitle(Base):
 app = FastAPI()
 
 
+##
+## Titles CRUD operations and helpers
+##
 
 async def get_title_by_id(title_id: int, db: Session) -> DBTitle:
     return db.query(DBTitle).filter(DBTitle.id == title_id).first()
 
+
+##
+## Titles API.
+##
 @app.get("/api/titles/{title_id}", response_model=Title)
 async def titles_detail(title_id: int, db: Session = Depends(get_db)):
     output: DBTitle = await get_title_by_id(title_id=title_id, db=db)
