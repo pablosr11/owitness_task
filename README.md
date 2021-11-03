@@ -8,6 +8,8 @@
 - ```curl 'http://0.0.0.0:8080/api/titles'```
 - ```curl 'http://0.0.0.0:8080/api/titles/1'```
 - ```curl 'http://0.0.0.0:8080/api/titles?_order=desc&_sort=title_number,id'```
+- Dont forget to remove the image after testing to keep system lightweight
+    ```docker rmi $(docker images | grep 'pablosr11')```
 
 # Local setup:
 - Env setup: ```poetry install```
