@@ -2,7 +2,7 @@ from typing import List
 from fastapi import FastAPI, Depends, Request
 from pydantic import BaseModel
 from enum import Enum
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, desc
 from sqlalchemy import Column, Text, Integer
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, Query
@@ -72,15 +72,29 @@ class DBTitle(Base):
     title_class = Column(String(10))
     content = Column(Text)
 
+DEFAULT_PARAMS = {"_order": OrderKeys.asc, "_sort": SortKeys.id}
 app = FastAPI()
 
 
 ##
 ## Titles CRUD operations and helpers
 ##
+def parse_comma_separated_params(param_name: str):
+    def parse(request: Request):
+        splitted_params: List[str] = request.query_params.get(
+            param_name, DEFAULT_PARAMS[param_name]
+        ).split(",")
+        # Ideally, validate custom query parameters here.
+        return splitted_params
+
+    return parse
+
+
 async def get_titles(
     db: Session,
     title_class: TitleClass,
+    _sort: List[SortKeys],
+    _order: List[OrderKeys],
     _limit: int,
     _page: int,
 ) -> List[DBTitle]:
@@ -90,11 +104,20 @@ async def get_titles(
     if title_class:
         query = query.where(func.lower(DBTitle.title_class) == func.lower(title_class))
 
+    for idx, sorting_field in enumerate(_sort):
+        # No constraint on _sort vs _order params. Default to asc if no order param found.
+        ordering = _order[idx] if len(_order) > idx else OrderKeys.asc
+        if ordering != OrderKeys.asc:
+            query = query.order_by(desc(getattr(DBTitle, sorting_field)))
+        else:
+            query = query.order_by(getattr(DBTitle, sorting_field))
+
     # Assuming with page we mean an offset?
     query = query.offset(_page * PAGE_SIZE).limit(_limit)
 
     output = query.all()
     return output
+
 
 async def get_title_by_id(title_id: int, db: Session) -> DBTitle:
     return db.query(DBTitle).filter(DBTitle.id == title_id).first()
@@ -114,6 +137,8 @@ async def titles_detail(title_id: int, db: Session = Depends(get_db)):
 @app.get("/api/titles", response_model=List[TitleOutput])
 async def titles_list(
     title_class: TitleClass = None,
+    _sort: List[SortKeys] = Depends(parse_comma_separated_params("_sort")),
+    _order: List[OrderKeys] = Depends(parse_comma_separated_params("_order")),
     _limit: int = 50,
     _page: int = 0,
     db: Session = Depends(get_db),
@@ -122,6 +147,8 @@ async def titles_list(
     output: List[DBTitle] = await get_titles(
         db=db,
         title_class=title_class,
+        _sort=_sort,
+        _order=_order,
         _limit=_limit,
         _page=_page,
     )

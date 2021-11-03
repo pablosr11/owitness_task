@@ -22,3 +22,8 @@ def test_list_titles():
     response = client.get("/api/titles/")
     assert response.status_code == 200
 
+
+def test_list_titles_multiple_ordering():
+    response = client.get("/api/titles?_sort=id,title_number&_order=desc,desc&_page=1")
+    assert response.status_code == 200
+
