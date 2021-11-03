@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import FastAPI, Depends, Request
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 from enum import Enum
 from sqlalchemy import create_engine, func, desc
@@ -152,5 +153,8 @@ async def titles_list(
         _limit=_limit,
         _page=_page,
     )
+
+    if not output:
+        raise HTTPException(status_code=404, detail="No titles found")
 
     return output
