@@ -9,6 +9,7 @@ license = "Beerware"
 python = "^3.10"
 fastapi = "^0.70.0"
 uvicorn = "^0.15.0"
+SQLAlchemy = "^1.4.26"
 
 [tool.poetry.dev-dependencies]
 black = "^21.10b0"
