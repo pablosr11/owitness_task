@@ -1,10 +1,11 @@
+from typing import List
+from fastapi import FastAPI, Depends, Request
 from pydantic import BaseModel
 from enum import Enum
-from fastapi import FastAPI
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy import Column, Text, Integer
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.orm import sessionmaker, declarative_base, Session, Query
 from sqlalchemy.sql.sqltypes import String
 
 # On apis where we expect a large number of concurrent request, we
@@ -74,6 +75,18 @@ app = FastAPI()
 ##
 ## Titles CRUD operations and helpers
 ##
+async def get_titles(
+    db: Session,
+    title_class: TitleClass,
+) -> List[DBTitle]:
+
+    query: Query = db.query(DBTitle.id, DBTitle.title_class, DBTitle.title_number)
+
+    if title_class:
+        query = query.where(func.lower(DBTitle.title_class) == func.lower(title_class))
+
+    output = query.all()
+    return output
 
 async def get_title_by_id(title_id: int, db: Session) -> DBTitle:
     return db.query(DBTitle).filter(DBTitle.id == title_id).first()
@@ -87,4 +100,17 @@ async def titles_detail(title_id: int, db: Session = Depends(get_db)):
     output: DBTitle = await get_title_by_id(title_id=title_id, db=db)
     if not output:
         raise HTTPException(status_code=404, detail="Title not found")
+    return output
+
+
+@app.get("/api/titles", response_model=List[TitleOutput])
+async def titles_list(
+    title_class: TitleClass = None,
+    db: Session = Depends(get_db),
+):
+    output: List[DBTitle] = await get_titles(
+        db=db,
+        title_class=title_class,
+    )
+
     return output
