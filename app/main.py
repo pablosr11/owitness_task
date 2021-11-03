@@ -73,6 +73,10 @@ class DBTitle(Base):
     title_class = Column(String(10))
     content = Column(Text)
 
+
+# Normally we would separate the different api namespaces/scopes/resources into diff packages and modules
+# each of which would contain their prefixed router linked to the main app here.
+# Given this API only has 2 endpoints I decided to keep it in a single module and route through the main app.
 DEFAULT_PARAMS = {"_order": OrderKeys.asc, "_sort": SortKeys.id}
 app = FastAPI()
 
@@ -144,7 +148,10 @@ async def titles_list(
     _page: int = 0,
     db: Session = Depends(get_db),
 ):
-    # Manual validation of sort, and order params as they don't 
+    # Currently there are no restriction on who can use the endpoints. These would normally be
+    # handled at the router level to restrict a set of endpoints to specific users.
+
+    # Manual validation of sort, and order params as they don't
     # get validated. Separate into validating helper fns.
     for param in _sort:
         if param not in SortKeys._member_names_:

@@ -4,6 +4,11 @@ from app.main import app
 
 client = TestClient(app)
 
+# Tests are not setting up their own DB so they are fully coupled
+# to local DB contents.
+# Would normally follow a Given-When-Then structure
+
+
 def test_titles_detail():
     response = client.get("/api/titles/1")
     assert response.status_code == 200
