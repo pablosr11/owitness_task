@@ -8,6 +8,9 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, Query
 from sqlalchemy.sql.sqltypes import String
 
+# Configuration
+PAGE_SIZE: int = 10
+
 # On apis where we expect a large number of concurrent request, we
 # would have to switch to a client/server DB and pool connections.
 # For demo purposes, sqlite.
@@ -78,12 +81,17 @@ app = FastAPI()
 async def get_titles(
     db: Session,
     title_class: TitleClass,
+    _limit: int,
+    _page: int,
 ) -> List[DBTitle]:
 
     query: Query = db.query(DBTitle.id, DBTitle.title_class, DBTitle.title_number)
 
     if title_class:
         query = query.where(func.lower(DBTitle.title_class) == func.lower(title_class))
+
+    # Assuming with page we mean an offset?
+    query = query.offset(_page * PAGE_SIZE).limit(_limit)
 
     output = query.all()
     return output
@@ -106,11 +114,16 @@ async def titles_detail(title_id: int, db: Session = Depends(get_db)):
 @app.get("/api/titles", response_model=List[TitleOutput])
 async def titles_list(
     title_class: TitleClass = None,
+    _limit: int = 50,
+    _page: int = 0,
     db: Session = Depends(get_db),
 ):
+    # Trigger crud query
     output: List[DBTitle] = await get_titles(
         db=db,
         title_class=title_class,
+        _limit=_limit,
+        _page=_page,
     )
 
     return output
