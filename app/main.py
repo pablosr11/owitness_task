@@ -144,6 +144,17 @@ async def titles_list(
     _page: int = 0,
     db: Session = Depends(get_db),
 ):
+    # Manual validation of sort, and order params as they don't 
+    # get validated. Separate into validating helper fns.
+    for param in _sort:
+        if param not in SortKeys._member_names_:
+            raise HTTPException(status_code=422, detail="Invalid _sort query parameter")
+    for param in _order:
+        if param not in OrderKeys._member_names_:
+            raise HTTPException(
+                status_code=422, detail="Invalid _order query parameter"
+            )
+
     # Trigger crud query
     output: List[DBTitle] = await get_titles(
         db=db,

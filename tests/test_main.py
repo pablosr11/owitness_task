@@ -27,3 +27,7 @@ def test_list_titles_multiple_ordering():
     response = client.get("/api/titles?_sort=id,title_number&_order=desc,desc&_page=1")
     assert response.status_code == 200
 
+
+def test_list_titles_multiple_ordering_query_validation():
+    response = client.get("/api/titles?_sort=id&_limit=3&_page=1&_order=UP")
+    assert response.status_code == 422
