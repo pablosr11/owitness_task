@@ -1,5 +1,13 @@
 # Requirements:
 - [Poetry](https://python-poetry.org/) for dependency management.
+- Docker
+
+# Just run it:
+- Make sure port 8080 is free or change it below.
+- ```docker run --name ow --rm  -p 8080:8080 pablosr11/owitness:0.0.1```
+- ```curl 'http://0.0.0.0:8080/api/titles'```
+- ```curl 'http://0.0.0.0:8080/api/titles/1'```
+- ```curl 'http://0.0.0.0:8080/api/titles?_order=desc&_sort=title_number,id'```
 
 # Local setup:
 - Env setup: ```poetry install```
@@ -12,4 +20,4 @@ the image. Make sure you have run ```python utils.py``` before proceeding so it 
 populated.
 - To avoid dealing with poetry when building, export the current dependencies as
 a requirements file: ```poetry export -f requirements.txt --output requirements.txt```
-- Image building: ```docker build -t IMAGE_NAME:IMAGE_TAG .  ```
+- Image building: ```docker build -t REPOSITORY/IMAGE_NAME:IMAGE_TAG .  ```
