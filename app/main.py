@@ -12,6 +12,12 @@ from sqlalchemy.sql.sqltypes import String
 # Configuration
 PAGE_SIZE: int = 10
 
+# On a larger project probably makes sense to move the DB
+# variables, config and schemas out of the main module to
+# decouple it form the main app definition, define boundaries
+# and have a clear picture of where every part of the system
+# is (api, db interface, business logic, data validation/schemas etc)
+
 # On apis where we expect a large number of concurrent request, we
 # would have to switch to a client/server DB and pool connections.
 # For demo purposes, sqlite.
