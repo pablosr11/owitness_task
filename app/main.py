@@ -135,6 +135,28 @@ async def get_title_by_id(title_id: int, db: Session) -> DBTitle:
 
 
 ##
+## Titles API helpers
+##
+async def validate_params(sort: List[str], order: List[str]):
+    if len(sort) != len(order):
+        raise HTTPException(
+            status_code=400,
+            detail="Mismatched number of _sort and _order parameters",
+        )
+
+    # Manual validation of sort and order params as they don't
+    # get validated.
+    for param in sort:
+        if param not in SortKeys._member_names_:
+            raise HTTPException(status_code=422, detail="Invalid _sort query parameter")
+    for param in order:
+        if param not in OrderKeys._member_names_:
+            raise HTTPException(
+                status_code=422, detail="Invalid _order query parameter"
+            )
+
+
+##
 ## Titles API.
 ##
 @app.get("/api/titles/{title_id}", response_model=Title)
@@ -148,8 +170,8 @@ async def titles_detail(title_id: int, db: Session = Depends(get_db)):
 @app.get("/api/titles", response_model=List[TitleOutput])
 async def titles_list(
     title_class: TitleClass = None,
-    _sort: List[SortKeys] = Depends(parse_comma_separated_params("_sort")),
-    _order: List[OrderKeys] = Depends(parse_comma_separated_params("_order")),
+    _sort: List[str] = Depends(parse_comma_separated_params("_sort")),
+    _order: List[str] = Depends(parse_comma_separated_params("_order")),
     _limit: int = 50,
     _page: int = 0,
     db: Session = Depends(get_db),
@@ -157,16 +179,8 @@ async def titles_list(
     # Currently there are no restriction on who can use the endpoints. These would normally be
     # handled at the router level to restrict a set of endpoints to specific users.
 
-    # Manual validation of sort, and order params as they don't
-    # get validated. Separate into validating helper fns.
-    for param in _sort:
-        if param not in SortKeys._member_names_:
-            raise HTTPException(status_code=422, detail="Invalid _sort query parameter")
-    for param in _order:
-        if param not in OrderKeys._member_names_:
-            raise HTTPException(
-                status_code=422, detail="Invalid _order query parameter"
-            )
+    # Basic validation
+    await validate_params(sort=_sort, order=_order)
 
     # Trigger crud query
     output: List[DBTitle] = await get_titles(
