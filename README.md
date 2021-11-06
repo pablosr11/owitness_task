@@ -23,3 +23,6 @@ populated.
 - To avoid dealing with poetry when building the image, export the current dependencies as
 a requirements file: ```poetry export -f requirements.txt --output requirements.txt```
 - Image building: ```docker build -t REPOSITORY/IMAGE_NAME:IMAGE_TAG .  ```
+
+# Testing
+- pytest --cov=app --cov-report term-missing tests
